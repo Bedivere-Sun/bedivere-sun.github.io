@@ -390,7 +390,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-12-25 14:20:53" itemprop="dateModified" datetime="2020-12-25T14:20:53+08:00">2020-12-25</time>
+        <time title="修改时间：2020-12-25 14:56:01" itemprop="dateModified" datetime="2020-12-25T14:56:01+08:00">2020-12-25</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -721,7 +721,7 @@
 <td align="left">这个最坑，名称不一定，但是表示常用记录字段，一般会标识正在描述的特定类型的一种聚合。 比如 PropertyDescriptor[[value]]:42, [[Writable]]:false, [[Configurable]]:true等……</td>
 </tr>
 </tbody></table>
-<h2 id="关于对象的内部方法及“插槽”————Internal-Methods-Slots"><a href="#关于对象的内部方法及“插槽”————Internal-Methods-Slots" class="headerlink" title="关于对象的内部方法及“插槽”————Internal Methods / Slots"></a>关于对象的内部方法及“插槽”————Internal Methods / Slots</h2><p>在ECMAScript中， 对象的实际语义是通过内部方法的算法过程来指定的。 ECMAScript引擎中的每一个对象都与一组运行时环境定义的内部方法相关联。它们并不属于ECMAScript的一部分，但是ECMAScript语言要求每个对象的实现都要指定其内部拥有一个完整的与之关联的方法集。</p>
+<h2 id="关于对象的内部方法及“插槽”-Internal-Methods-Slots"><a href="#关于对象的内部方法及“插槽”-Internal-Methods-Slots" class="headerlink" title="关于对象的内部方法及“插槽” - Internal Methods / Slots"></a>关于对象的内部方法及“插槽” - Internal Methods / Slots</h2><p>在ECMAScript中， 对象的实际语义是通过内部方法的算法过程来指定的。 ECMAScript引擎中的每一个对象都与一组运行时环境定义的内部方法相关联。它们并不属于ECMAScript的一部分，但是ECMAScript语言要求每个对象的实现都要指定其内部拥有一个完整的与之关联的方法集。</p>
 <p>内部方法(Internal Methods)是多态的。即党对不同的对象调用通用内部方法时可以执行对应的不同的算法。调用内部方法的实际目的是调用到对应的“target”。在运行时环境下，如果你要实现的算法其内部不支持，那么就会抛出TypeError异常。</p>
 <p>内部“插槽”(Internal Slots)对应与对象关联的内部的状态。它们不是对象的属性，而是由ECMAScript语言类型或特定类型的值来构成，所以不会被继承。除非另有明确的要求，否则内部“插槽”将作为创建对象过程的一部分来分配，不能动态添加到对象中，通常构建时其值应该为Undefined。</p>
 <p>一般情况下ECMAScript规定每个对象都有自己的基本内部方法，但是所有对象不一定对这些方法都使用相同的算法。</p>
