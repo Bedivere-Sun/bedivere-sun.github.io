@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"koorimeo.gitee.io","root":"/","images":"/images","scheme":"Muse","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+<meta name="description" content="起因看到Number(Array(8))返回NaN之后我就觉得很好奇，[undefined,…]是一个数组，是个对象，对象一般都是先valueOf然后toString的。那么Number()在接收参数后按说执行到valueOf就会报错了。但是Number还是可以正常处理，难道是在这个过程中valueOf返回了自己的原值[undefined,…]之后自动执行了toString？这么智能么？又或者，N">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ValueOf？toString？谁先谁后？？">
+<meta property="og:url" content="https://koorimeo.gitee.io/2019/04/26/fcfbe8947ae4/">
+<meta property="og:site_name" content="克里喵子">
+<meta property="og:description" content="起因看到Number(Array(8))返回NaN之后我就觉得很好奇，[undefined,…]是一个数组，是个对象，对象一般都是先valueOf然后toString的。那么Number()在接收参数后按说执行到valueOf就会报错了。但是Number还是可以正常处理，难道是在这个过程中valueOf返回了自己的原值[undefined,…]之后自动执行了toString？这么智能么？又或者，N">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-04-26T06:18:42.000Z">
+<meta property="article:modified_time" content="2020-12-25T06:20:53.389Z">
+<meta property="article:author" content="Koori">
+<meta property="article:tag" content="Javascript">
+<meta property="article:tag" content="范式">
+<meta property="article:tag" content="探索">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://koorimeo.gitee.io/2019/04/26/fcfbe8947ae4/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>ValueOf？toString？谁先谁后？？ | 克里喵子</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">克里喵子</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">克里喵子的小角落</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%B7%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text">起因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%8F%E8%BF%87"><span class="nav-number">2.</span> <span class="nav-text">经过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">3.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">4.</span> <span class="nav-text">后记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A%E8%8C%83%E5%BC%8F%E5%AE%9A%E4%B9%89%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">附录：范式定义总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OrdinaryCreateFromConstructor-constructor-intrinsicDefaultProto-internalSlotsList"><span class="nav-number">5.1.</span> <span class="nav-text">OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ToNumber-argument"><span class="nav-number">5.2.</span> <span class="nav-text">ToNumber(argument)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ToPrimitive-input-PreferredType"><span class="nav-number">5.3.</span> <span class="nav-text">ToPrimitive(input[, PreferredType])</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Completion-Record-%E5%AE%8C%E6%88%90%E8%AE%B0%E5%BD%95"><span class="nav-number">5.4.</span> <span class="nav-text">Completion Record - 完成记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ReturnIfAbrupt"><span class="nav-number">5.5.</span> <span class="nav-text">ReturnIfAbrupt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Get-O-P"><span class="nav-number">5.6.</span> <span class="nav-text">Get(O,P)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GetMethod-O-P"><span class="nav-number">5.7.</span> <span class="nav-text">GetMethod(O,P)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GetV-V-P"><span class="nav-number">5.8.</span> <span class="nav-text">GetV(V,P)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ToObject-argument"><span class="nav-number">5.9.</span> <span class="nav-text">ToObject(argument)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IsCallable-argument"><span class="nav-number">5.10.</span> <span class="nav-text">IsCallable(argument)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ECMAScript%E6%A0%87%E5%87%86%E4%B8%AD%E4%B8%80%E4%BA%9B%E8%8C%83%E5%BC%8F%E7%9A%84%E6%9C%AF%E8%AF%AD%E8%A7%A3%E6%9E%90%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">ECMAScript标准中一些范式的术语解析：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ECMAScript%E7%9A%84%E5%8A%A9%E8%AE%B0%E7%AC%A6%E5%8F%B7%EF%BC%9A"><span class="nav-number">7.</span> <span class="nav-text">ECMAScript的助记符号：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%86%85%E9%83%A8%E6%96%B9%E6%B3%95%E5%8F%8A%E2%80%9C%E6%8F%92%E6%A7%BD%E2%80%9D%E2%80%94%E2%80%94%E2%80%94%E2%80%94Internal-Methods-Slots"><span class="nav-number">8.</span> <span class="nav-text">关于对象的内部方法及“插槽”————Internal Methods &#x2F; Slots</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number"></span> <span class="nav-text">数组的构造函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Object-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">Object.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Boolean-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">Boolean.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Symbol-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">Symbol.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Number-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">Number.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Date-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">Date.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#String-prototype-valueOf"><span class="nav-number"></span> <span class="nav-text">String.prototype.valueOf()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#this-Boolean-Number-String-Value-value"><span class="nav-number"></span> <span class="nav-text">this(Boolean|Number|String)Value(value)</span></a></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Koori</p>
+  <div class="site-description" itemprop="description">一个属于克里喵子的静静的小角落</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://koorimeo.gitee.io/2019/04/26/fcfbe8947ae4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Koori">
+      <meta itemprop="description" content="一个属于克里喵子的静静的小角落">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="克里喵子">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ValueOf？toString？谁先谁后？？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-04-26 14:18:42" itemprop="dateCreated datePublished" datetime="2019-04-26T14:18:42+08:00">2019-04-26</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-12-25 14:20:53" itemprop="dateModified" datetime="2020-12-25T14:20:53+08:00">2020-12-25</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%A5%BD%E5%A5%87%E5%AE%B3%E6%AD%BB%E7%8C%AB/" itemprop="url" rel="index"><span itemprop="name">好奇害死猫</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>看到Number(Array(8))返回NaN之后我就觉得很好奇，[undefined,…]是一个数组，是个对象，对象一般都是先valueOf然后toString的。那么Number()在接收参数后按说执行到valueOf就会报错了。但是Number还是可以正常处理，难道是在这个过程中valueOf返回了自己的原值[undefined,…]之后自动执行了toString？这么智能么？又或者，Number接收到了数组，然后自动先执行了toString?</p>
+<h2 id="经过"><a href="#经过" class="headerlink" title="经过"></a>经过</h2><p>我找了一些朋友讨论了一下没有什么结果。于是我带着非常强烈的好奇心，想看看到底Number到底是怎么实现的。<br>搜索无果后我想到了ECMA262……</p>
+<p>根据<a target="_blank" rel="noopener" href="https://www.ecma-international.org/ecma-262/6.0/#sec-number-constructor-number-value">ECMA262</a>的说明，Number调用后会有一系列的抽象过程：</p>
+<ol>
+<li>如果没有参数传入，设置n为+0</li>
+<li>如果有参数则设置n为ToNumber(value)</li>
+<li>ReturnIfAbrupt(n)</li>
+<li>如果返回的新值是undefined，返回n本身</li>
+<li>设置O为OrdinaryCreateFromConstructor(新值, “%NumberPrototype%”, «[[NumberData]]»)</li>
+<li>ReturnIfAbrupt(O)</li>
+<li>设置O的[[NumberData]]内部“插槽”值为0</li>
+<li>返回O</li>
+</ol>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>所以这么看，其实数组还是执行了valueOf之后被识别的，并没有再通过toString来获取字串。不过我大概明白了这么一些实现原理：</p>
+<ol>
+<li>Number(value)的value接收的不止是String类型，其实支持的是any这个类型，什么都可以。</li>
+<li>基本上，除非类型为String（或者一些其它行为）使ToPrimitive(input, hint)的hint为’string’以外，直接访问对象的过程，默认都是通过valueOf返回自己的初值的过程。而数组作为object类型的对象，先执行valueOf，返回的就是[…]的这种形式的数据。当Number接收的是对象的时候并不会因为是对象进而内部“潜移默化”的执行toString的转换。</li>
+<li>ECMAScript标准中每个基本类型都有一个原型，每个原型都有自己的一个内部“插槽”(<code>Internal Slots</code>)属性值。</li>
+<li><code>Array</code>的内部“插槽”的值是按照<code>%ObjectPrototype%</code>来获取的，所以当数组为空的时候原型的内部“插槽”的值为null，相当于执行了Number(null)，抽象ToNumber(null)，查表可得+0，也就是0。</li>
+<li>当数字只有一个元素的时候，其内部“插槽”的值是第0个元素，然后拆包，所以如果数组是[1]就相当于插槽是1，如果是[[[[[[[[[[[[[[[5]]]]]]]]]]]]]]]那么“插槽”值就是5。如果数组是[1,2,3]，那么拆包后就是1,2,3，那么“插槽”的值就是1,2,3[0]，也就是undefined。那么Number(undefined)的时候，抽象ToNumber(undefined)，查表可得<code>NaN</code></li>
+</ol>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>通过这次对ECMA262的解读，我基本上了解了怎么阅读这份ES6标准，也明白了如何去理解各个API底层的原理——虽然可能和自己的工作并不相关吧……另外我觉得我更能理解浏览器为什么标准都不同这个道理了。其实你在ES6标准中根本就找不到什么通用浏览器API，它就是一个非常庞大的范式集合，可能这个集合标准更适合的是给大家自己做浏览器用吧……你也可以知道为什么浏览器之间标准不同，也可以明白为啥有的浏览器的API有这些，另一些却没有。收获还算是蛮大的……</p>
+<p>为了能理解这些过程，我翻译了每一个涉及到的抽象概念的范式定义。如果你有兴趣，可以通过以下涉及到的范式概念来从根本上了解这个过程是怎么回事。</p>
+<h2 id="附录：范式定义总结"><a href="#附录：范式定义总结" class="headerlink" title="附录：范式定义总结"></a>附录：范式定义总结</h2><h3 id="OrdinaryCreateFromConstructor-constructor-intrinsicDefaultProto-internalSlotsList"><a href="#OrdinaryCreateFromConstructor-constructor-intrinsicDefaultProto-internalSlotsList" class="headerlink" title="OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList)"></a>OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList)</h3><p>OrdinaryCreateFromConstructor创建一个对象，如果这个对象存在，它的[[Prototype]]值将从构造函数的原型属性中获取。如果不存在，则将由intrinsicDefaultProto命名的内部函数作为[[Prototype]]。internalSlotsList是一个集必须被声明的名称和额外内部Slots的一个List。如果没有提供这个List，则会用一个空List取代。它的执行过程如下：</p>
+<ol>
+<li>Assert: IntrinsicDefaultProto是内部对象的名称字串。相应的对象必须为一个用于内部可用来作为对象的[[Prototype]]值。</li>
+<li>设 proto 为GetPrototypeFromConstructor(constructor, intrinsicDefaultProto).</li>
+<li>ReturnIfAbrupt(proto).</li>
+<li>返回 ObjectCreate(proto, internalSlotsList)</li>
+</ol>
+<h3 id="ToNumber-argument"><a href="#ToNumber-argument" class="headerlink" title="ToNumber(argument)"></a>ToNumber(argument)</h3><p>将argument转换为Number值，转换表如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="left">结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Undefined</td>
+<td align="left">NaN</td>
+</tr>
+<tr>
+<td align="center">Null</td>
+<td align="left">+0</td>
+</tr>
+<tr>
+<td align="center">Boolean</td>
+<td align="left">如果是true返回1，否则返回0</td>
+</tr>
+<tr>
+<td align="center">Number</td>
+<td align="left">返回原值</td>
+</tr>
+<tr>
+<td align="center">String</td>
+<td align="left">视具体情况</td>
+</tr>
+<tr>
+<td align="center">Symbol</td>
+<td align="left">抛出TypeError异常</td>
+</tr>
+<tr>
+<td align="center">Object</td>
+<td align="left">应用以下步骤：1. 设primValue为ToPrimitive(argument, hint). 2. 返回ToNumber(primValue)</td>
+</tr>
+<tr>
+<td align="center">Completion Record</td>
+<td align="left">如果argument是一个中断(abrupt completion)值返回argument自身。否则返回ToNumber(argument.[[value]])</td>
+</tr>
+</tbody></table>
+<h3 id="ToPrimitive-input-PreferredType"><a href="#ToPrimitive-input-PreferredType" class="headerlink" title="ToPrimitive(input[, PreferredType])"></a>ToPrimitive(input[, PreferredType])</h3><table>
+<thead>
+<tr>
+<th align="center">输入类型</th>
+<th align="left">结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Completion Record</td>
+<td align="left">如果input是一个中断(abrupt completion)则返回input本身，否则返回ToPrimitive(input.[[value]])且传送额外PreferredType</td>
+</tr>
+<tr>
+<td align="center">Undefined</td>
+<td align="left">返回input</td>
+</tr>
+<tr>
+<td align="center">Null</td>
+<td align="left">返回input</td>
+</tr>
+<tr>
+<td align="center">Boolean</td>
+<td align="left">返回input</td>
+</tr>
+<tr>
+<td align="center">Number</td>
+<td align="left">返回input</td>
+</tr>
+<tr>
+<td align="center">String</td>
+<td align="left">返回input</td>
+</tr>
+<tr>
+<td align="center">Symbol</td>
+<td align="left">返回input</td>
+</tr>
+</tbody></table>
+<p>当input类型是Object，则经过以下步骤判断返回内容：</p>
+<ol>
+<li>如果没有PreferredType，则设置hint为默认值”default”</li>
+<li>如果PreferredType是文本，则设置hint为”string”</li>
+<li>如果PreferredType是数字，则设置hint为”number”</li>
+<li>设置exoticToPrim为GetMethod(input, @@toPrimitive)</li>
+<li>ReturnIfAbrupt(exoticToPrim)</li>
+<li>如果exoticToPrim不是undefined,则<ol>
+<li>设result为Call(exoticToPrim, input, «hint»)</li>
+<li>ReturnIfAbrupt(result)</li>
+<li>如果Type(result)不是对象，则返回result自己</li>
+<li>否则抛出TypeError异常</li>
+</ol>
+</li>
+<li>如果hint为”default”,则改hint值为”number”</li>
+<li>返回OrdinaryToPrimitive(input, hint)</li>
+</ol>
+<p>当OrdinaryToPrimitive通过O和hint调用，则会通过以下步骤执行：</p>
+<ol>
+<li>Assert: Type(O)是Object</li>
+<li>Assert: Type(hint)是String且只能是”string”或”number”.</li>
+<li>如果hint是”string”，则设 methodName 为 «”toString”,”valueOf”»</li>
+<li>否则设 method 为 «”valueOf”, “toString”»</li>
+<li>遍历列表的每一个methodNames<ol>
+<li>设method为Get(O, name)</li>
+<li>ReturnIfAbrupt(method)</li>
+<li>如果IsCallable(method)为true，则<ol>
+<li>设result为Call(method, O)</li>
+<li>ReturnIfAbrupt(method)</li>
+<li>如果Type(result)不是Object,返回result</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>其它情况一律抛出TypeError异常</li>
+</ol>
+<p><strong>@@toPrimitive</strong>：没有hint的情况下通常目标input会优先判断为number，通过@@toPrimitive可以将Date对象和Symbol对象的ToPrimitive覆盖为自己的定义。当hint为字串时，Date对象不会对其处理。</p>
+<h3 id="Completion-Record-完成记录"><a href="#Completion-Record-完成记录" class="headerlink" title="Completion Record - 完成记录"></a>Completion Record - 完成记录</h3><p>完成记录（Completion Record）值是一种用来表示运行时环境下数值与控制流的传播（比如break, continue, return和throw等）的表示方式，它包含3列内容：</p>
+<table>
+<thead>
+<tr>
+<th align="center">列名</th>
+<th align="center">数值</th>
+<th align="left">意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">[[type]]</td>
+<td align="center">normal, break, continue, return, throw之中的一个</td>
+<td align="left">表示当前完成状态</td>
+</tr>
+<tr>
+<td align="center">[[value]]</td>
+<td align="center">空值（empty）或任意ECMAScript语言的值</td>
+<td align="left">表示创建出来的值</td>
+</tr>
+<tr>
+<td align="center">[[target]]</td>
+<td align="center">空值（empty）或任意ECMAScript字串</td>
+<td align="left">表示直接传递控制信息的标签</td>
+</tr>
+</tbody></table>
+<h3 id="ReturnIfAbrupt"><a href="#ReturnIfAbrupt" class="headerlink" title="ReturnIfAbrupt"></a>ReturnIfAbrupt</h3><p>ReturnIfAbrupt是一个算法阶段，表示为ReturnIfAbrupt(argument),表示argument如果是一个中断值返回argument，或者是一条完成记录(Completion Record)</p>
+<h3 id="Get-O-P"><a href="#Get-O-P" class="headerlink" title="Get(O,P)"></a>Get(O,P)</h3><p>Get用于获取目标对象特定属性的值，O代表对象，P代表属性，是属性的键名。它的执行过程是这样的：</p>
+<ol>
+<li>Assert: Type(O)是Object</li>
+<li>Assert: IsPropertyKey(P)为true</li>
+<li>返回 O.[[Get]](P,O)</li>
+</ol>
+<h3 id="GetMethod-O-P"><a href="#GetMethod-O-P" class="headerlink" title="GetMethod(O,P)"></a>GetMethod(O,P)</h3><p>GetMethod用于获取目标对象的特定属性值，这个属性值必须是函数。它的执行过程是这样的：</p>
+<ol>
+<li>Assert: IsPropertyKey(P)为true</li>
+<li>设func 为GetV(O,P)</li>
+<li>ReturnIfAbrupt(func)</li>
+<li>如果func为undefine或null则统一返回undefined</li>
+<li>如果 IsCallable(func)为false，抛出TypeError异常</li>
+<li>返回 func</li>
+</ol>
+<h3 id="GetV-V-P"><a href="#GetV-V-P" class="headerlink" title="GetV(V,P)"></a>GetV(V,P)</h3><p>GetV用于获取ECMAScript语言之的特定属性的值。如果这个值不是对象，则包装成相应的对象然后查找目标属性。V是值，P是属性。它的执行过程是这样的：</p>
+<ol>
+<li>Assert: IsPropertyKey(P)为true</li>
+<li>设O为ToObject(V)</li>
+<li>ReturnIfAbrupt(O)</li>
+<li>返回 O.[[Get]](P,V)</li>
+</ol>
+<p>IsPropertyKey(argument)<br>用于查看argument是否可以作为属性键名来用的值。这个argument必须符合ECMAScript语言的值或完成记录值。</p>
+<ol>
+<li>ReturnIfAbrupt(argument)</li>
+<li>如果Type(argument)是String，返回true</li>
+<li>如果Type(argument)是Symbol，返回true</li>
+<li>返回false</li>
+</ol>
+<h3 id="ToObject-argument"><a href="#ToObject-argument" class="headerlink" title="ToObject(argument)"></a>ToObject(argument)</h3><p>将argument转换为如下的一种对象：</p>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="left">结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Completion Record</td>
+<td align="left">如果argument是一个中断值，返回argument，否则返回ToObject(argument.[[value]])</td>
+</tr>
+<tr>
+<td align="center">Undefined</td>
+<td align="left">抛出TypeError异常</td>
+</tr>
+<tr>
+<td align="center">Null</td>
+<td align="left">抛出TypeError异常</td>
+</tr>
+<tr>
+<td align="center">Boolean</td>
+<td align="left">返回一个新的Boolean(argument)对象</td>
+</tr>
+<tr>
+<td align="center">Number</td>
+<td align="left">返回一个新的Number(argument)对象</td>
+</tr>
+<tr>
+<td align="center">String</td>
+<td align="left">返回一个新的String(argument)对象</td>
+</tr>
+<tr>
+<td align="center">Symbol</td>
+<td align="left">返回一个新的Symbol(argument)对象</td>
+</tr>
+<tr>
+<td align="center">Object</td>
+<td align="left">返回argument自身</td>
+</tr>
+</tbody></table>
+<h3 id="IsCallable-argument"><a href="#IsCallable-argument" class="headerlink" title="IsCallable(argument)"></a>IsCallable(argument)</h3><p>查看argument是否是可调用的函数，即带有[[Call]]这个内部方法。</p>
+<ol>
+<li>ReturnIfAbrupt(argument)</li>
+<li>如果Type(argument)不是对象， 返回false</li>
+<li>如果argument有[[Call]]这个内部方法，返回true</li>
+<li>返回false</li>
+</ol>
+<h2 id="ECMAScript标准中一些范式的术语解析："><a href="#ECMAScript标准中一些范式的术语解析：" class="headerlink" title="ECMAScript标准中一些范式的术语解析："></a>ECMAScript标准中一些范式的术语解析：</h2><p>这些术语写的都特别像函数，所以有的时候看ECMAScript真的很费力……我列出了一些标准术语供大家参考，以免和我一样为了查一个原理要来回跳转那么次</p>
+<table>
+<thead>
+<tr>
+<th align="center">术语</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Assert:</td>
+<td align="left">设置断言，就是普通的assert</td>
+</tr>
+<tr>
+<td align="center">Type(目标)</td>
+<td align="left">检查目标的（运行时）类型。比如Type(x)表示”the type of x”</td>
+</tr>
+<tr>
+<td align="center">List</td>
+<td align="left">List，列表，用于表示一种表达式中有序的参数列表。这些列表的元素一般通过标准助记符号解释。</td>
+</tr>
+<tr>
+<td align="center">arguments</td>
+<td align="left">表示列表中的各元素，即”List arguments”。注意如果argument有下标，则表示第n+1个参数，比如arguments[<code>2</code>]就表示第<code>3</code>个参数</td>
+</tr>
+<tr>
+<td align="center">%NumberPrototype%</td>
+<td align="left">相当于Number.prototype。是Number原型的固有对象。该对象包含这些属性： {[[Writable]]:false, [[Enumerable]]:false, [[Configurable]]:false}</td>
+</tr>
+<tr>
+<td align="center">%ArrayPrototype%</td>
+<td align="left">相当于Array.prototype。是Array原型的固有对象。该对象包含这些属性： {[[Writable]]:false, [[Enumerable]]:false, [[Configurable]]:false}</td>
+</tr>
+</tbody></table>
+<h2 id="ECMAScript的助记符号："><a href="#ECMAScript的助记符号：" class="headerlink" title="ECMAScript的助记符号："></a>ECMAScript的助记符号：</h2><p>这也是很多人看不明白到底这些都是干什么的，其实都是为了方便书写规范或者帮助人们理解概念而设置的符号。</p>
+<table>
+<thead>
+<tr>
+<th align="center">符号</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">«»</td>
+<td align="left">列表符号。通过语义的方式表达一个列表中的各个元素值。例如«a,b»即表示一个包含a元素和b元素的列表</td>
+</tr>
+<tr>
+<td align="center">[[]]</td>
+<td align="left">记录符号。描述算法中的数据聚合。通过[[]]表示的值要么是ECMAScript的值，要么是与记录内容的类型相关联的值，比如[[value]]这种写法就相当于是表示这里是目标的一个值</td>
+</tr>
+<tr>
+<td align="center">[[]]:n</td>
+<td align="left">对象语法符号。特定值记录符号，通过对象文字的语义记录值。比如[[field1]]:42, [[field2]]:false, [[field3]]:empty 则表示这是一个包含三个字段的值。需要注意如果没有标明值，则表示这个字段实际上不存在</td>
+</tr>
+<tr>
+<td align="center">.</td>
+<td align="left">表示引用字段的记录值。比如R是上一步中获得的记录，则R.[[field2]]表示“R中名为[[field2]]的字段”</td>
+</tr>
+<tr>
+<td align="center">常见名</td>
+<td align="left">这个最坑，名称不一定，但是表示常用记录字段，一般会标识正在描述的特定类型的一种聚合。 比如 PropertyDescriptor[[value]]:42, [[Writable]]:false, [[Configurable]]:true等……</td>
+</tr>
+</tbody></table>
+<h2 id="关于对象的内部方法及“插槽”————Internal-Methods-Slots"><a href="#关于对象的内部方法及“插槽”————Internal-Methods-Slots" class="headerlink" title="关于对象的内部方法及“插槽”————Internal Methods / Slots"></a>关于对象的内部方法及“插槽”————Internal Methods / Slots</h2><p>在ECMAScript中， 对象的实际语义是通过内部方法的算法过程来指定的。 ECMAScript引擎中的每一个对象都与一组运行时环境定义的内部方法相关联。它们并不属于ECMAScript的一部分，但是ECMAScript语言要求每个对象的实现都要指定其内部拥有一个完整的与之关联的方法集。</p>
+<p>内部方法(Internal Methods)是多态的。即党对不同的对象调用通用内部方法时可以执行对应的不同的算法。调用内部方法的实际目的是调用到对应的“target”。在运行时环境下，如果你要实现的算法其内部不支持，那么就会抛出TypeError异常。</p>
+<p>内部“插槽”(Internal Slots)对应与对象关联的内部的状态。它们不是对象的属性，而是由ECMAScript语言类型或特定类型的值来构成，所以不会被继承。除非另有明确的要求，否则内部“插槽”将作为创建对象过程的一部分来分配，不能动态添加到对象中，通常构建时其值应该为Undefined。</p>
+<p>一般情况下ECMAScript规定每个对象都有自己的基本内部方法，但是所有对象不一定对这些方法都使用相同的算法。</p>
+<p>主要内部方法应该包含如下一些：</p>
+<table>
+<thead>
+<tr>
+<th align="center">内部方法</th>
+<th align="center">验证</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">[[GetPrototypeOf]]</td>
+<td align="center">()→ Object 丨 Null</td>
+<td align="left">区分对象是否有继承的属性。 null值标识没有继承的属性</td>
+</tr>
+<tr>
+<td align="center">[[SetPrototypeOf]]</td>
+<td align="center">(Object 丨Null )→ Boolean</td>
+<td align="left">将this与Object进行关联检查以继承Object的属性，成功返回true，失败返回false，无可继承属性返回null</td>
+</tr>
+<tr>
+<td align="center">[[IsExtensible]]</td>
+<td align="center">()→Boolean</td>
+<td align="left">检查是否允许为对象增加额外的属性</td>
+</tr>
+<tr>
+<td align="center">[[PreventExtensions]]</td>
+<td align="center">()→Boolean</td>
+<td align="left">控制新属性是否可以添加到对象中</td>
+</tr>
+<tr>
+<td align="center">[[GetOwnProperty]]</td>
+<td align="center">(propertyKey)→Undefined丨Property Descriptor</td>
+<td align="left">返回自己的一个属性描述符（Property Descriptor），propertyKey就是属性的键名，如果没有此属性，返回undefined</td>
+</tr>
+<tr>
+<td align="center">[[HasProperty]]</td>
+<td align="center">(propertyKey)→Boolean</td>
+<td align="left">返回对象中是否存在目标属性键名propertyKey</td>
+</tr>
+<tr>
+<td align="center">[[Get]]</td>
+<td align="center">(propertyKey, Receiver)→ any</td>
+<td align="left">返回对象中键名为propertyKey的值。如果值为ECMAScript代码，则该代码将被执行以获取最终计算结果的取值。Receiver用来在执行代码时指定this</td>
+</tr>
+<tr>
+<td align="center">[[Set]]</td>
+<td align="center">(propertyKey, value, Receiver)→ Boolean</td>
+<td align="left">为属性键名propertyKey设置一个值value。如果value为ECMAScript代码，则该代码将被执行以获取最终计算结果的取值。Receiver用来在执行代码时指定this</td>
+</tr>
+<tr>
+<td align="center">[[Delete]]</td>
+<td align="center">(propertyKey)→Boolean</td>
+<td align="left">从对象中去掉指定键名的属性。如果操作后属性依旧存在，或者未能删除的，返回false，否则返回true</td>
+</tr>
+<tr>
+<td align="center">[[DefineOwnProperty]]</td>
+<td align="center">(propertyKey, PropertyDescriptor)→Boolean</td>
+<td align="left">创建或修改自己的属性，propertyKey是键名，状态描述为PropertyDescriptor属性描述符。如果修改/创建成功，返回true，否则返回false</td>
+</tr>
+<tr>
+<td align="center">[[Enumerate]]</td>
+<td align="center">()→Object</td>
+<td align="left">返回一个迭代器对象，生成可供枚举的键字串</td>
+</tr>
+<tr>
+<td align="center">[[OwnPropertyKeys]]</td>
+<td align="center">()→List of propertyKey</td>
+<td align="left">返回自己所有属性键名的列表</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">内部方法</th>
+<th align="center">验证</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">[[Call]]</td>
+<td align="center">(any, a List of any)→ any</td>
+<td align="left">通过函数表达式调用与自己关联的代码。参数为this和所有需要传递进来的参数List。要成功调用此内部方法必须先实现这个内部方法，且这个对象必须为<strong>callable</strong></td>
+</tr>
+<tr>
+<td align="center">[[Construct]]</td>
+<td align="center">(a List of any, Object)→ Object</td>
+<td align="left">通过<strong>new</strong>或<strong>super</strong>操作符创建一个对象。第一个参数是包含运算符参数的列表。第二个参数是最初应用新运算符的对象。实现这个内部方法的对象即为“构造函数”。一个函数对象不一定就是构造函数，它有可能是不具有[[Construct]]内部方法的对象。</td>
+</tr>
+</tbody></table>
+<h1 id="数组的构造函数"><a href="#数组的构造函数" class="headerlink" title="数组的构造函数"></a>数组的构造函数</h1><p>数组的构造函数就是%Array%固有的对象，其初值便是全局变量的Array原型。不论是被用作构造函数还是一般的函数调用，它都会创建一个外部的Array对象。因此函数调用<code>Array(...)</code>是等价于对象构建表达式<code>new Array(...)</code>的（参数一致的前提下）。</p>
+<p>数组的构造函数是一个可以继承的，并且可以根据参数数量与类型进行重载的函数。因此它可以通过<code>extends</code>关键字在定义类时派生。子类属于Array的一个外部对象，其构造函数必须通过<code>super</code>来获取Array的构造函数才能将子类的实例初始化为一个Array对象。Array.protype方法多是通用的，并不依赖于其外部对象的this。</p>
+<h1 id="Object-prototype-valueOf"><a href="#Object-prototype-valueOf" class="headerlink" title="Object.prototype.valueOf()"></a>Object.prototype.valueOf()</h1><p>返回 ToObject(<code>this</code>)</p>
+<h1 id="Boolean-prototype-valueOf"><a href="#Boolean-prototype-valueOf" class="headerlink" title="Boolean.prototype.valueOf()"></a>Boolean.prototype.valueOf()</h1><p>返回 thisBooleanValue(<code>this</code>)</p>
+<h1 id="Symbol-prototype-valueOf"><a href="#Symbol-prototype-valueOf" class="headerlink" title="Symbol.prototype.valueOf()"></a>Symbol.prototype.valueOf()</h1><ol>
+<li>设s为<code>this</code></li>
+<li>如果Type(s)是Symbol，返回s</li>
+<li>如果Type(s)不是Object，抛出TypeError异常</li>
+<li>如果s没有[[SymbolData]]内部“插槽”，抛出TypeError异常</li>
+<li>返回s的[[SymbolData]]内部“插槽”</li>
+</ol>
+<h1 id="Number-prototype-valueOf"><a href="#Number-prototype-valueOf" class="headerlink" title="Number.prototype.valueOf()"></a>Number.prototype.valueOf()</h1><ol>
+<li>设x为 thisNumberValue(this)</li>
+<li>返回x</li>
+</ol>
+<h1 id="Date-prototype-valueOf"><a href="#Date-prototype-valueOf" class="headerlink" title="Date.prototype.valueOf()"></a>Date.prototype.valueOf()</h1><p>返回this的time值，该值为Number类型</p>
+<h1 id="String-prototype-valueOf"><a href="#String-prototype-valueOf" class="headerlink" title="String.prototype.valueOf()"></a>String.prototype.valueOf()</h1><ol>
+<li>设s为thisStringValue(this)</li>
+<li>返回s</li>
+</ol>
+<h1 id="this-Boolean-Number-String-Value-value"><a href="#this-Boolean-Number-String-Value-value" class="headerlink" title="this(Boolean|Number|String)Value(value)"></a>this(Boolean|Number|String)Value(value)</h1><p>就是一种抽象过程，以thisBooleanValue为例，过程为：</p>
+<ol>
+<li>如果Type(value)是Boolean，返回value</li>
+<li>如果Type(value)是Object且Value有[[BooleanData]]内部“插槽”，则：<ol>
+<li>Assert: value的[[BooleanData]]内部“插槽”的值是Boolean类型的值</li>
+<li>返回value的[[BooleanData]]内部“插槽”的值</li>
+</ol>
+</li>
+<li>抛出TypeError异常</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Javascript/" rel="tag"># Javascript</a>
+              <a href="/tags/%E8%8C%83%E5%BC%8F/" rel="tag"># 范式</a>
+              <a href="/tags/%E6%8E%A2%E7%B4%A2/" rel="tag"># 探索</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/04/26/0cb9e07071b2/" rel="prev" title="Javascript的那些基础小坑">
+                  <i class="fa fa-chevron-left"></i> Javascript的那些基础小坑
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/25/853df623c983/" rel="next" title="小米盒子4SE去广告战斗记录">
+                  小米盒子4SE去广告战斗记录 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Koori</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

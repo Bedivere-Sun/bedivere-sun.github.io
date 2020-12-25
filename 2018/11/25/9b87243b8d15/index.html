@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"koorimeo.gitee.io","root":"/","images":"/images","scheme":"Muse","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+<meta name="description" content="标题有点绕……看完了你旧明白为啥标题这么蛋疼了…… 第一次摸存储，大概了解了一些设置和配置的问题。这里做个小总结。大致背景就是客户有个项目用存储保存大量的内容（其实只有500G，且最终数据量不会超过1.5TB……这个存储被之前的以为专家把22.5T全分出去了……汗……），然后我前任的工程师离职了，估计他也忘记有这么个东西了，于是我完全不知情的情况下接到通知要求我去给客户做一组冷备主机，要求能和存储">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浪潮AS1100H通过Windows客户端在CentOS7中的配置方法">
+<meta property="og:url" content="https://koorimeo.gitee.io/2018/11/25/9b87243b8d15/">
+<meta property="og:site_name" content="克里喵子">
+<meta property="og:description" content="标题有点绕……看完了你旧明白为啥标题这么蛋疼了…… 第一次摸存储，大概了解了一些设置和配置的问题。这里做个小总结。大致背景就是客户有个项目用存储保存大量的内容（其实只有500G，且最终数据量不会超过1.5TB……这个存储被之前的以为专家把22.5T全分出去了……汗……），然后我前任的工程师离职了，估计他也忘记有这么个东西了，于是我完全不知情的情况下接到通知要求我去给客户做一组冷备主机，要求能和存储">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.z4a.net/images/2018/11/25/1126581688-5beb610949470_articlex.png">
+<meta property="article:published_time" content="2018-11-25T05:49:29.000Z">
+<meta property="article:modified_time" content="2020-12-25T06:03:31.413Z">
+<meta property="article:author" content="Koori">
+<meta property="article:tag" content="配置">
+<meta property="article:tag" content="存储">
+<meta property="article:tag" content="AS1100H">
+<meta property="article:tag" content="多路径">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.z4a.net/images/2018/11/25/1126581688-5beb610949470_articlex.png">
+
+
+<link rel="canonical" href="https://koorimeo.gitee.io/2018/11/25/9b87243b8d15/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>浪潮AS1100H通过Windows客户端在CentOS7中的配置方法 | 克里喵子</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">克里喵子</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">克里喵子的小角落</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E6%88%91%E8%AE%B0%E5%BD%95%E7%9A%84%E2%80%9C%E7%9F%A5%E8%AF%86%E7%82%B9%E2%80%9D"><span class="nav-number">1.</span> <span class="nav-text">一些我记录的“知识点”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%A7%E8%87%B4%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">大致流程</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Koori</p>
+  <div class="site-description" itemprop="description">一个属于克里喵子的静静的小角落</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://koorimeo.gitee.io/2018/11/25/9b87243b8d15/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Koori">
+      <meta itemprop="description" content="一个属于克里喵子的静静的小角落">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="克里喵子">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          浪潮AS1100H通过Windows客户端在CentOS7中的配置方法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-11-25 13:49:29" itemprop="dateCreated datePublished" datetime="2018-11-25T13:49:29+08:00">2018-11-25</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-12-25 14:03:31" itemprop="dateModified" datetime="2020-12-25T14:03:31+08:00">2020-12-25</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BB%8F%E9%AA%8C/" itemprop="url" rel="index"><span itemprop="name">经验</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>标题有点绕……看完了你旧明白为啥标题这么蛋疼了……</p>
+<p>第一次摸存储，大概了解了一些设置和配置的问题。这里做个小总结。<br>大致背景就是客户有个项目用存储保存大量的内容（其实只有500G，且最终数据量不会超过1.5TB……这个存储被之前的以为专家把22.5T全分出去了……汗……），然后我前任<br>的工程师离职了，估计他也忘记有这么个东西了，于是我完全不知情的情况下接到通知要求我去给客户做一组冷备主机，要求能和存储连接起来，然后方便后面厂商的人过来<br>搭对应的服务。于是我的存储之旅就开始了</p>
+<p>我的这次学习经历答案主要来自百度(很多不靠谱的答案）、浪潮存储的客服（给予了一定的支持，不过后来好像我给他弄烦了……)和<a target="_blank" rel="noopener" href="https://github.com/Bedivere-Sun/man/blob/master/man5/multipath.conf">mutipath.conf(5)</a>…</p>
+<h3 id="一些我记录的“知识点”"><a href="#一些我记录的“知识点”" class="headerlink" title="一些我记录的“知识点”"></a>一些我记录的“知识点”</h3><ol>
+<li>存储一般是一个机头拉N个扩展柜主要区别是存储的机头主要用于将所有数据汇总，借口比扩展柜丰富。</li>
+<li>机头的传输光纤与扩展柜的最后一组光纤连接即可，其它的靠BUS线连接</li>
+<li>浪潮AS1100H的网线口做管理口使用，需要使用对应版本的SANtricity软件进行配置。这个比较蛋疼，因为管理的时候你只有Windows客户端，<br>没有其它办法……不如浪潮的服务器好用，毕竟好歹浪潮的服务器还支持MGMT口浏览器查看和JAVA管理客户端。AS1100H存储……只支持Windows的SANtricity客户端。</li>
+<li>AS1100H必须使用最新的，也就是2.20这个版本或（未来可能有）更新的SANTricity才能管理磁盘阵列，早一个版本都不行……</li>
+<li>AS1100H的机头分A（左）和B（右）两部分连接管理时需要在A和B的相同网线口的Port编号接出两根网线（请用6类或超5类或更好的线），另一端接入一个交换机，<br>然后再从交换机与计算机连接，运行SANTricity才能找到这个阵列信息。</li>
+<li>AS1100H特别蛋疼的还有一个问题，校时的延迟问题，差不多平均一年系统时钟慢8分钟左右……所以个人建议最好是每半年通过SANTricity连接并校时一次。</li>
+<li>AS1100H的机头IP地址是有默认值的，分别是A部192.168.128.1、和B部192.168.128.2</li>
+<li>AS1100H的授权主要分为分组授权和独立授权。独立授权时主机分别独占一个分区授权，一个分区只能分配给一个主机使用，适合像我这次遇到的客户之前请的“专家”设<br>置了这个授权且客户只想冷备一台主机的情况……如果是双机热备做队列写入的话，推荐使用分组授权，所有组内的主机使用同一个分区授权，每次数据传入均通过队列来处理，<br>基本不会出现数据混乱的问题。</li>
+</ol>
+<h3 id="大致流程"><a href="#大致流程" class="headerlink" title="大致流程"></a>大致流程</h3><p><img src="https://www.z4a.net/images/2018/11/25/1126581688-5beb610949470_articlex.png" alt="设备线路概要图"><br>根据以上我记录的小“知识点”我按照上图做好了光纤连接。</p>
+<p>之后进入SANTricity，双击SANTricity中找到的磁盘信息，打开后应该会询问你是否要做校时，看你的心情选择。<br>之后创建主机，如果你的光纤连接正确（即有光对无光），那么SANTricity在创建主机时会直接认出两张HBA卡的wwn号，你就不用额外输入注册了。<br>按照下面这个拓扑逻辑直接配置新主机即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Storage</span><br><span class="line">  |-&gt; Groups(1)</span><br><span class="line">         |-&gt; Host(theSystem)</span><br><span class="line">              |-&gt; type: Linux(DM-MP)</span><br><span class="line">              |-&gt; Interface type: Fibre Channel</span><br><span class="line">                     |-&gt; Host port identifier: 旧服务器HBA卡1WWN</span><br><span class="line">                     |-&gt; Alias: port1</span><br><span class="line">                     |-&gt; Host port identifier: 旧服务器HBA卡2WWN</span><br><span class="line">                     |-&gt; Alias: port2</span><br><span class="line">              |-&gt; Host(theSystemB)</span><br><span class="line">              |-&gt; type: Linux(DM-MP)</span><br><span class="line">              |-&gt; Interface type: Fibre Channel</span><br><span class="line">                     |-&gt; Host port identifier: 新服务器HBA卡1WWN</span><br><span class="line">                     |-&gt; Alias: port1</span><br><span class="line">                     |-&gt; Host port identifier: 新服务器HBA卡2WWN</span><br><span class="line">                     |-&gt; Alias: port2</span><br></pre></td></tr></table></figure>
+<p>接下来的操作就要注意了：如果主机是独立授权的，那么<strong>在下面操作前，一定要先停掉旧系统的相关服务，卸载卷，以免出现两台主机同时写一个扇区的严重问题</strong>！</p>
+<p>做到这里后，点击选择theSystem（也就是之前创建的旧服务器），就会看到之前专家给绑定的那个22T的卷，选择“change…”做变更，记住LUN号，<br>选择主机改为”theSystemB”，LUN号选择相同的号码。点确定。SANTricity会弹出警告，要求你<strong>执行前一定要卸载任何已挂载的驱动器，以免数据受损</strong>。</p>
+<p>如果卷绑定给了Groups(1)，则没有以上这些担心。但是，客服提醒过我，千万不要将原先是主机独立授权的卷指给分组，否则数据旧读不了了。</p>
+<p>这样基本硬件层面基本上就配置完毕了。打开新服务器，进入CentOS7……这里要再唠叨一句……浪潮的NF5270M3是真特么慢啊……而且不支持绝对UEFI，各位为政府客户<br>提出采购建议前一定要注意。CMS真的关不了，UEFI版本为1.x，环境为伪UEFI，设置为UEFI first时服务器启动将会提高3倍的速度，因为所有自检程序只能在MBR<br>下运行，所以一到了UEFI就全跳了……Orz</p>
+<p>我还要再啰嗦一句……浪潮的NF5270M3真的很牛X……关闭所有网卡的PXE可以再提高一倍的启动速度！……Orz……不过这台服务器真的比所有SystemX的塔式服务器都快很多倍。</p>
+<p>启动CentOS7后，做了该做的事情后（看你了，比如预先安装JAVA环境、yum yupdate、安装一些其它软件等）先安装Linux自带多路径服务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install device-mapper-multipath -y</span><br></pre></td></tr></table></figure>
+<p>之后获取连接的设备的wwid。这个wwid有两种方法获得，一个是通过SANTricity，点击卷属性-&gt;详细可以看到一组WWID信息，看起来像是16位MAC地址。<br>去掉当中的”:”，将全部数值记录下来。</p>
+<p>如果你使用的ssh连接服务器，你也可以用如下命令直接复制查询结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;usr&#x2F;lib&#x2F;udev&#x2F;scsi_id -g -u &#x2F;dev&#x2F;sd&lt;n&gt;</span><br><span class="line">#这个&lt;n&gt;就是你的硬件标识符，一般是你的hd或sd后面序号+1</span><br></pre></td></tr></table></figure>
+<p>然后设置启用（即开机自启动）多路径服务。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl enable multipathd</span><br><span class="line">#这里说明以下，启用服务和开始服务一般只要没有名字冲突，不需要特地加.service或.socket指名区分。</span><br></pre></td></tr></table></figure>
+<p>然后导入默认的配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp &#x2F;usr&#x2F;share&#x2F;doc&#x2F;device-mapper-multipath-0.4.9&#x2F;multipath.conf &#x2F;etc&#x2F;multipath.conf</span><br></pre></td></tr></table></figure>
+<p>我用了两三天把整个multipath.conf文件的官方说明好好看了一下，并将其整理做了翻译，如果你有其他方面的想法，可以参考我这个文件：<br><a target="_blank" rel="noopener" href="https://github.com/Bedivere-Sun/man/blob/master/man5/multipath.conf">mutipath.conf(5)</a>…</p>
+<p>因为我的服务器非常简单，三块本地磁盘做了个RAID5，所以就只有个sda。基本上为了区别本地磁盘和存储阵列，在多路径配置的第一步就是在黑名单里把本地磁盘给列出来。<br>我这里直接用了个最简单的正则匹配。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">blacklist &#123;</span><br><span class="line">    devnode &quot;^sda&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后在multipath部分把wwid加上，记住这里一定要把你得到的wwid的冒号去掉：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">multipath [</span><br><span class="line">    wwid 00112233445566778899aabbccddeeff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来在device部分把你的存储详细信息写一下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">devices &#123;</span><br><span class="line">        device &#123;</span><br><span class="line">                vendor                  &quot;Inspur&quot;</span><br><span class="line">                product                 &quot;AS1100H&quot;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>都写好之后，保存文件，设置多路径服务为启用的状态（启用即开机启动）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl enable multipathd.service</span><br></pre></td></tr></table></figure>
+<p>之后重启服务器，让它在开机的时候做一次扫描。扫描后你可以通过<code>multipath -ll</code>查看多路径服务的状态，也可以通过<code>lsblk</code>命令查看多路径对应的服务器。</p>
+<p>通常多路径服务默认会给第一个卷命名为“yellow”，这个映射可以在/dev/mapper/中找到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file &#x2F;dev&#x2F;mapper&#x2F;yellow</span><br></pre></td></tr></table></figure>
+<p>通过上面这个指令可以得知映射出来的是个什么文件，一般都是块文件，直接mount就可以了。</p>
+<p>最后还是要多一句嘴：<br>如果是主机独立授权，一定要保证存储的卷一次只被一个主机挂载。我虽然没尝试过吧，但是抱着宁可信其有的态度，还是要多加小心。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%85%8D%E7%BD%AE/" rel="tag"># 配置</a>
+              <a href="/tags/%E5%AD%98%E5%82%A8/" rel="tag"># 存储</a>
+              <a href="/tags/AS1100H/" rel="tag"># AS1100H</a>
+              <a href="/tags/%E5%A4%9A%E8%B7%AF%E5%BE%84/" rel="tag"># 多路径</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/11/21/866c9df7c3fc/" rel="prev" title="为NAT网络设置端口转发">
+                  <i class="fa fa-chevron-left"></i> 为NAT网络设置端口转发
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/12/19/33d6387e61ce/" rel="next" title="ncu升级后的注意事项">
+                  ncu升级后的注意事项 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Koori</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

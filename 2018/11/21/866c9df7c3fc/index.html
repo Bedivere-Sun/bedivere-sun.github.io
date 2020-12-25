@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"koorimeo.gitee.io","root":"/","images":"/images","scheme":"Muse","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+<meta name="description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文： 当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为NAT网络设置端口转发">
+<meta property="og:url" content="https://koorimeo.gitee.io/2018/11/21/866c9df7c3fc/">
+<meta property="og:site_name" content="克里喵子">
+<meta property="og:description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文： 当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-21T06:08:37.000Z">
+<meta property="article:modified_time" content="2020-12-25T06:09:26.888Z">
+<meta property="article:author" content="Koori">
+<meta property="article:tag" content="VirtualBox">
+<meta property="article:tag" content="NAT网络">
+<meta property="article:tag" content="配置">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://koorimeo.gitee.io/2018/11/21/866c9df7c3fc/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>为NAT网络设置端口转发 | 克里喵子</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">克里喵子</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">克里喵子的小角落</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Koori</p>
+  <div class="site-description" itemprop="description">一个属于克里喵子的静静的小角落</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://koorimeo.gitee.io/2018/11/21/866c9df7c3fc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Koori">
+      <meta itemprop="description" content="一个属于克里喵子的静静的小角落">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="克里喵子">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          为NAT网络设置端口转发
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-11-21 14:08:37" itemprop="dateCreated datePublished" datetime="2018-11-21T14:08:37+08:00">2018-11-21</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-12-25 14:09:26" itemprop="dateModified" datetime="2020-12-25T14:09:26+08:00">2020-12-25</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%96%87%E6%A1%A3%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">文档翻译</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文：</p>
+<p>当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其大包以相同的方式转发给各个不同的虚拟机端口。</p>
+<p>对于应用此技术的主机或其它（物理或虚拟的）机器而言，这就好比将服务代理给了一个真实运行的主机上。这也就意味着你不能将相同的服务运行在相同的主机端口上。然而，你依旧可以从中获益——比如你可以在非主机操作系统下启动服务，而你的主机或其它（物理或虚拟）机器也不会因某个bug或致命的（尤其是安全）问题而停止服务。</p>
+<p>你可以用图形化界面的“端口转发规则”配置NAT网络适配器的端口转发设置。在这个界面里你可以允许通过特殊端口来映射主机与虚拟机间的网络流量控制。此外你也可以通过命令行工具 VBoxManage modifyvm完成设置。具体可以参考8.8 “VBoxManage modifyvm”。</p>
+<p>你首先应该知道将虚拟机的哪个对应服务端口指向主机（通常你可能会将主机和虚拟机的端口号设置为同一个）。你可以将主机上任何未使用的端口号映射给虚拟机。比如你可以通过以下命令配置建立一个NAT到虚拟机的ssh服务的转发规则：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VBoxManage modifyvm &quot;目标虚拟机名&quot; --natpf1 &quot;规则名, tcp, , 2222, , 22</span><br></pre></td></tr></table></figure>
+<p>执行上述命令后，所有来自主机2222端口的流量请求都会被转发给虚拟机的22端口。要注意的是tcp属性是必须指定的，它决定了转发什么协议的流量（你也可以设置为udp或者其它的什么）。规则名就是这个转发规则的一个标志名称，如果未指定规则名，则执行命令后会自动生成一个。在–natpf后面的数字1是虚拟机网卡的编号。其它VBoxManage中涉及到的–natpf参数也是这个意思。</p>
+<p>如果要删除这条规则，你可使用以下命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VBoxManage modifyvm &quot;目标虚拟机名&quot; --natpf1 delete &quot;规则名&quot;</span><br></pre></td></tr></table></figure>
+<p>如果你的目标虚拟机实例没有采用内置的HDCP服务那么就要给在设置规则时指定目标虚拟机的ip地址： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VBoxManage modifyvm &quot;目标虚拟机名&quot; --natpf1 &quot;规则名,tcp,,2222,10.0.2.19,22&quot;</span><br></pre></td></tr></table></figure>
+<p>上面这条命令和之前那条ssh端口转发规则几乎相同，它只是告诉NAT网络这个虚拟机对象在10.0.2.19。如果要指定所有流量经目标主机转发，则可以使用如下的命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VBoxManage modifyvm &quot;目标虚拟机名&quot; --natpf1 &quot;规则名,tcp,127.0.0.1,2222,,22&quot;</span><br></pre></td></tr></table></figure>
+<p>这样做会将所有通过TCP访问localhost（127.0.0.1）22端口的流量都转发给虚拟机实例的22端口。</p>
+<p>同样的，你也可以实现在虚拟机运行时对NAT连接的访问设置。具体请参考 8.13 “VBoxManage controlvm”。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/VirtualBox/" rel="tag"># VirtualBox</a>
+              <a href="/tags/NAT%E7%BD%91%E7%BB%9C/" rel="tag"># NAT网络</a>
+              <a href="/tags/%E9%85%8D%E7%BD%AE/" rel="tag"># 配置</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/11/20/db026d455ecb/" rel="prev" title="GNU C编译器更高版本的安装总结">
+                  <i class="fa fa-chevron-left"></i> GNU C编译器更高版本的安装总结
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/11/25/9b87243b8d15/" rel="next" title="浪潮AS1100H通过Windows客户端在CentOS7中的配置方法">
+                  浪潮AS1100H通过Windows客户端在CentOS7中的配置方法 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Koori</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
