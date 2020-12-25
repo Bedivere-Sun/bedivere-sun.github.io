@@ -23,15 +23,15 @@
     var NexT = window.NexT || {};
     var CONFIG = {"hostname":"koorimeo.gitee.io","root":"/","images":"/images","scheme":"Muse","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
   </script>
-<meta name="description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文： 当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其">
+<meta name="description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="为NAT网络设置端口转发">
 <meta property="og:url" content="https://koorimeo.gitee.io/2018/11/21/866c9df7c3fc/">
 <meta property="og:site_name" content="克里喵子">
-<meta property="og:description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文： 当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其">
+<meta property="og:description" content="写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2018-11-21T06:08:37.000Z">
-<meta property="article:modified_time" content="2020-12-25T06:09:26.888Z">
+<meta property="article:modified_time" content="2020-12-25T07:28:20.602Z">
 <meta property="article:author" content="Koori">
 <meta property="article:tag" content="VirtualBox">
 <meta property="article:tag" content="NAT网络">
@@ -102,6 +102,9 @@
       <div class="header-inner"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
     </div>
   </div>
 
@@ -123,6 +126,11 @@
 
 
 
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section">首页</a></li>
+  </ul>
+</nav>
 
 
 
@@ -195,6 +203,8 @@
     <span>0%</span>
   </div>
 
+  <a href="https://gitee.com/koorimeo" class="github-corner" title="我的码云主页" aria-label="我的码云主页" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
@@ -242,7 +252,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-12-25 14:09:26" itemprop="dateModified" datetime="2020-12-25T14:09:26+08:00">2020-12-25</time>
+        <time title="修改时间：2020-12-25 15:28:20" itemprop="dateModified" datetime="2020-12-25T15:28:20+08:00">2020-12-25</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -257,6 +267,7 @@
   
 </div>
 
+            <div class="post-description">写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。</div>
         </div>
       </header>
 
@@ -264,7 +275,8 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <p>写这个是因为当时不太明白这个端口转发怎么用。所以有此译文。大体意思是对的，翻译质量一般。以下是正文：</p>
+        <a id="more"></a>
+
 <p>当虚拟机使用NAT或其它VirtualBox内部网络连接时，其状态在主机同一层面来说是不可见的。也就是说，虚拟机实例所提供的服务是不能通过主机或其它终端直接连接处理的。然而，VirtualBox可以通过端口转发将指定的服务提供给外界。这一过程相当于VirtualBox在主机上监听指定的端口然后将其大包以相同的方式转发给各个不同的虚拟机端口。</p>
 <p>对于应用此技术的主机或其它（物理或虚拟的）机器而言，这就好比将服务代理给了一个真实运行的主机上。这也就意味着你不能将相同的服务运行在相同的主机端口上。然而，你依旧可以从中获益——比如你可以在非主机操作系统下启动服务，而你的主机或其它（物理或虚拟）机器也不会因某个bug或致命的（尤其是安全）问题而停止服务。</p>
 <p>你可以用图形化界面的“端口转发规则”配置NAT网络适配器的端口转发设置。在这个界面里你可以允许通过特殊端口来映射主机与虚拟机间的网络流量控制。此外你也可以通过命令行工具 VBoxManage modifyvm完成设置。具体可以参考8.8 “VBoxManage modifyvm”。</p>
